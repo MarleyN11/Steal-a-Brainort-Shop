@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Marleys Imperium</title>
+<style>
+body { font-family: Arial, sans-serif; margin:0; padding:0; transition: background 0.5s ease; color:#fff; }
+body.login-bg { background: linear-gradient(to right, #00c6ff, #0072ff);}
+body.register-bg { background: linear-gradient(to right, #f857a6, #ff5858);}
+body.dashboard-bg { background: linear-gradient(to bottom, #1e3c72, #2a5298);}
+.box { max-width:400px; margin:50px auto; padding:20px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.3); background:rgba(0,0,0,0.3);}
+h2 { text-align:center; }
+input, button, textarea { display:block; width:100%; margin:10px 0; padding:10px; border-radius:5px; border:none; }
+button { cursor:pointer; background:#4CAF50; color:#fff; font-weight:bold; }
+button:hover { background:#45a049; }
+.hidden { display:none; }
+
+/* Dashboard */
+#app { padding:20px; border-radius:10px; max-width:1000px; margin:30px auto; background: rgba(0,0,0,0.2); }
+.imperium-section { border:1px solid rgba(255,255,255,0.3); padding:10px; margin:10px 0; border-radius:5px; }
+.announcement { border-bottom:1px solid rgba(255,255,255,0.3); padding:5px; margin:5px 0; }
+.user-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.user-row button { width:30%; padding:5px; margin-left:5px; font-size:12px; }
+
+/* MiniGames */
+#quiz, #memory { background: rgba(255,255,255,0.1); padding:15px; border-radius:8px; margin-top:20px;}
+#quiz button, #memory button { width:auto; margin:5px; }
+.card { width:60px; height:60px; background:#333; display:inline-block; margin:5px; line-height:60px; text-align:center; cursor:pointer; font-size:20px; border-radius:5px; }
+.card.matched { background:green; cursor:default; }
+</style>
+</head>
+<body class="login-bg">
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+<h2>Login</h2>
+<input type="text" id="loginUser" placeholder="Benutzername">
+<input type="password" id="loginPass" placeholder="Passwort">
+<button onclick="login()">Einloggen</button>
+<p style="text-align:center;">Noch kein Konto? <a href="#" style="color:#ffdd57;" onclick="showRegister()">Registrieren</a></p>
+<div id="msg"></div>
+</div>
+
+<!-- REGISTRIERUNG -->
+<div id="registerBox" class="box hidden">
+<h2>Registrierung</h2>
+<input type="text" id="regUser" placeholder="Benutzername">
+<input type="password" id="regPass" placeholder="Passwort">
+<input type="date" id="regBirth" placeholder="Geburtsdatum">
+<button onclick="register()">Registrieren</button>
+<p style="text-align:center;">Nahh, hast du schon ein Konto? <a href="#" style="color:#ffdd57;" onclick="showLogin()">Login</a></p>
+<div id="msgReg"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="hidden">
+<h2>Willkommen zu Marleys Imperium</h2>
+<button onclick="logout()">Logout</button>
+
+<!-- Admin Toggle Button -->
+<div id="adminButtonContainer" class="hidden">
+<button onclick="toggleAdminPanel()">Admin Panel anzeigen/verstecken</button>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel" class="imperium-section hidden">
+<h3>Benutzerverwaltung (Admin)</h3>
+<div id="userList"></div>
+</div>
+
+<!-- Ankündigungen -->
+<div class="imperium-section">
+<h3>Ankündigungen</h3>
+<div id="announcements"></div>
+<div id="adminAnnounce" class="hidden">
+<textarea id="newAnnounce" placeholder="Neue Ankündigung eingeben"></textarea>
+<button onclick="addAnnouncement()">Ankündigung hinzufügen</button>
+</div>
+</div>
+
+<!-- MiniGames -->
+<div id="quiz" class="imperium-section">
+<h3>Quiz</h3>
+<div id="quizQuestion"></div>
+<div id="quizAnswers"></div>
+<button onclick="nextQuestion()">Nächste Frage</button>
+</div>
+
+<div id="memory" class="imperium-section">
+<h3>Memory</h3>
+<div id="memoryBoard"></div>
+</div>
+
+<script>
+// Storage Keys
+const USERS_KEY = 'imperium_users_v5';
+const SESSION_KEY = 'imperium_session_v5';
+const ANNOUNCE_KEY = 'imperium_announcements_v5';
+
+// Initial Admin
+if(!localStorage.getItem(USERS_KEY)){
+    localStorage.setItem(USERS_KEY, JSON.stringify([
+        {user:'Marley', pass:'060184', birth:'2000-01-01', isAdmin:true}
+    ]));
+}
+
+// Hilfsfunktionen
+function load(k){ return JSON.parse(localStorage.getItem(k) || '[]'); }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function currentUser(){ return localStorage.getItem(SESSION_KEY); }
+
+// Login & Logout
+function login(){
+    const u=document.getElementById('loginUser').value.trim();
+    const p=document.getElementById('loginPass').value;
+    const users=load(USERS_KEY);
+    const found=users.find(x=>x.user===u && x.pass===p);
+    if(!found){document.getElementById('msg').textContent='Falscher Benutzername oder Passwort'; return;}
+    localStorage.setItem(SESSION_KEY,u);
+    renderApp();
+}
+function logout(){
+    localStorage.removeItem(SESSION_KEY);
+    document.getElementById('app').classList.add('hidden');
+    showLogin();
+    renderAnnouncements(); // Ankündigungen auch auf Login-Seite sichtbar
+}
+
+// Registrierung
+function register(){
+    const u=document.getElementById('regUser').value.trim();
+    const p=document.getElementById('regPass').value;
+    const b=document.getElementById('regBirth').value;
+    if(!u||!p||!b){document.getElementById('msgReg').textContent='Bitte alles ausfüllen'; return;}
+    const users=load(USERS_KEY);
+    if(users.find(x=>x.user===u)){document.getElementById('msgReg').textContent='Benutzer existiert bereits'; return;}
+    users.push({user:u, pass:p, birth:b, isAdmin:false});
+    save(USERS_KEY,users);
+    document.getElementById('msgReg').textContent='Registrierung erfolgreich! Bitte einloggen.';
+}
+
+// Anzeigen Login / Registrierung
+function showLogin(){
+    document.getElementById('loginBox').classList.remove('hidden');
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('msg').textContent='';
+    document.body.className = 'login-bg';
+}
+function showRegister(){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('registerBox').classList.remove('hidden');
+    document.getElementById('msgReg').textContent='';
+    document.body.className = 'register-bg';
+}
+
+// App rendern
+function renderApp(){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.body.className = 'dashboard-bg';
+    const users=load(USERS_KEY);
+    const admin=users.find(u=>u.user===currentUser() && u.isAdmin);
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('adminAnnounce').classList.toggle('hidden', !admin);
+    document.getElementById('adminButtonContainer').classList.toggle('hidden', !admin);
+    renderUsers();
+    renderAnnouncements();
+    loadQuiz();
+    loadMemory();
+}
+
+// Admin Panel toggle
+function toggleAdminPanel(){
+    const panel = document.getElementById('adminPanel');
+    panel.classList.toggle('hidden');
+}
+
+// Benutzerverwaltung (Admin)
+function renderUsers(){
+    const list=document.getElementById('userList');
+    const users=load(USERS_KEY);
+    list.innerHTML='';
+    const admin=users.find(u=>u.user===currentUser() && u.isAdmin);
+    users.forEach((u,i)=>{
+        const row=document.createElement('div');
+        row.className='user-row';
+        row.innerHTML=`<span>${u.user} - ${u.pass} - Geb: ${u.birth} ${u.isAdmin?'(Admin)':''}</span>`;
+        if(admin && u.user !== 'Marley'){
+            const delBtn=document.createElement('button');
+            delBtn.textContent='Löschen';
+            delBtn.onclick=()=>{users.splice(i,1); save(USERS_KEY,users); renderUsers();};
+            const adminBtn=document.createElement('button');
+            adminBtn.textContent=u.isAdmin?'Admin entfernen':'Zu Admin machen';
+            adminBtn.onclick=()=>{ u.isAdmin=!u.isAdmin; save(USERS_KEY,users); renderUsers(); };
+            row.appendChild(delBtn);
+            row.appendChild(adminBtn);
+        }
+        list.appendChild(row);
+    });
+}
+
+// Ankündigungen
+function renderAnnouncements(){
+    const list=document.getElementById('announcements');
+    const announces=load(ANNOUNCE_KEY);
+    list.innerHTML='';
+    const users=load(USERS_KEY);
+    const admin=users.find(u=>u.user===currentUser() && u.isAdmin);
+    announces.forEach((a,i)=>{
+        const div=document.createElement('div');
+        div.className='announcement';
+        div.innerHTML=`<strong>${a.date}:</strong> <span id="text${i}">${a.text}</span>`;
+        if(admin){
+            const editBtn=document.createElement('button');
+            editBtn.textContent='Bearbeiten';
+            editBtn.onclick=()=>{ 
+                const newText = prompt('Neue Ankündigung:', a.text);
+                if(newText){ a.text=newText; save(ANNOUNCE_KEY,announces); renderAnnouncements();}
+            };
+            const delBtn=document.createElement('button');
+            delBtn.textContent='Löschen';
+            delBtn.onclick=()=>{ announces.splice(i,1); save(ANNOUNCE_KEY,announces); renderAnnouncements();}
+            div.appendChild(editBtn);
+            div.appendChild(delBtn);
+        }
+        list.appendChild(div);
+    });
+}
+function addAnnouncement(){
+    const txt=document.getElementById('newAnnounce').value.trim();
+    if(!txt) return;
+    const announces=load(ANNOUNCE_KEY);
+    announces.push({text:txt, date:new Date().toLocaleString()});
+    save(ANNOUNCE_KEY,announces);
+    document.getElementById('newAnnounce').value='';
+    renderAnnouncements();
+}
+
+// Quiz
+let quizQuestions=[
+    {q:'2+2=?', a:['3','4','5','6'], correct:1},
+    {q:'Hauptstadt von Deutschland?', a:['Berlin','Paris','London','Madrid'], correct:0},
+    {q:'5*6=?', a:['30','25','35','40'], correct:0},
+    {q:'Welches Element hat das Symbol O?', a:['Gold','Oxygen','Silber','Wasserstoff'], correct:1},
+    {q:'10-4=?', a:['6','5','7','4'], correct:0},
+    {q:'3*3=?', a:['6','9','12','8'], correct:1},
+    {q:'Hauptstadt von Frankreich?', a:['Berlin','Paris','London','Madrid'], correct:1},
+    {q:'12/4=?', a:['2','3','4','5'], correct:2}
+];
+let currentQ = 0;
+function shuffle(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];} return array;}
+function loadQuiz(){ 
+    quizQuestions = shuffle(quizQuestions);
+    currentQ=0;
+    showQuestion();
+}
+function showQuestion(){
+    const q = quizQuestions[currentQ];
+    if(!q) return;
+    document.getElementById('quizQuestion').textContent = q.q;
+    const ansDiv = document.getElementById('quizAnswers');
+    ansDiv.innerHTML='';
+    q.a.forEach((ans,i)=>{
+        const b = document.createElement('button');
+        b.textContent=ans;
+        b.onclick=()=>{alert(i===q.correct?'Richtig!':'Falsch!');};
+        ansDiv.appendChild(b);
+    });
+}
+function nextQuestion(){ currentQ++; if(currentQ>=quizQuestions.length) loadQuiz(); else showQuestion(); }
+
+// Memory mit Zahlen und mehr Karten
+let memoryCards = [];
+let firstCard=null;
+function loadMemory(){
+    const numbers = [];
+    for(let i=1;i<=8;i++){ numbers.push(i); numbers.push(i); } // 8 Paare = 16 Karten
+    memoryCards = shuffle(numbers);
+    const board = document.getElementById('memoryBoard');
+    board.innerHTML='';
+    firstCard=null;
+    memoryCards.forEach((v,i)=>{
+        const c = document.createElement('div');
+        c.className='card';
+        c.dataset.value=v;
+        c.dataset.index=i;
+        c.textContent='';
+        c.onclick=()=>flipCard(c);
+        board.appendChild(c);
+    });
+}
+function flipCard(c){
+    if(c.classList.contains('matched') || c.textContent) return;
+    c.textContent = c.dataset.value;
+    if(!firstCard){ firstCard=c; return;}
+    if(firstCard.dataset.value===c.dataset.value){
+        firstCard.classList.add('matched');
+        c.classList.add('matched');
+    }else{
+        setTimeout(()=>{firstCard.textContent=''; c.textContent=''; firstCard=null;},800);
+    }
+    firstCard=null;
+}
+
+// Bei Laden prüfen
+window.onload = function(){
+    renderAnnouncements(); // Ankündigungen auch vor Login sichtbar
+    if(currentUser()) renderApp();
+}
+</script>
+</body>
+</html>
