@@ -2,341 +2,431 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Marleys Imperium</title>
+<title>System Security</title>
+
 <style>
-body { font-family: Arial, sans-serif; margin:0; padding:0; transition: background 0.5s ease; color:#fff; }
-body.login-bg { background: linear-gradient(to right, #00c6ff, #0072ff);}
-body.register-bg { background: linear-gradient(to right, #f857a6, #ff5858);}
-body.dashboard-bg { background: linear-gradient(to bottom, #1e3c72, #2a5298);}
-.box { max-width:400px; margin:50px auto; padding:20px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.3); background:rgba(0,0,0,0.3);}
-h2 { text-align:center; }
-input, button, textarea { display:block; width:100%; margin:10px 0; padding:10px; border-radius:5px; border:none; }
-button { cursor:pointer; background:#4CAF50; color:#fff; font-weight:bold; }
-button:hover { background:#45a049; }
-.hidden { display:none; }
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:black;
+    color:white;
+    overflow:hidden;
+}
+.center{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+.box{
+    background:#0b0b0b;
+    padding:30px;
+    border-radius:10px;
+    width:360px;
+    text-align:center;
+    box-shadow:0 0 20px red;
+}
+input{width:100%;padding:8px;margin-top:8px;}
+button{
+    width:100%;padding:10px;margin-top:15px;
+    background:red;color:white;font-weight:bold;border:none;cursor:pointer;
+}
+a{color:#22d3ee;cursor:pointer;font-size:14px;}
+.hidden{display:none;}
 
-/* Dashboard */
-#app { padding:20px; border-radius:10px; max-width:1000px; margin:30px auto; background: rgba(0,0,0,0.2); position:relative; }
-.imperium-section { border:1px solid rgba(255,255,255,0.3); padding:10px; margin:10px 0; border-radius:5px; }
-.announcement { border-bottom:1px solid rgba(255,255,255,0.3); padding:5px; margin:5px 0; }
-.user-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap: wrap; }
-.user-row button { width:auto; padding:5px 8px; margin-left:5px; font-size:12px; }
-#currentUserBox { position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:8px; font-size:14px; }
-#currentUserBox button { background:#e74c3c; font-size:12px; margin-top:5px; }
+/* 🌈 Hack + Melt */
+.hacked{
+    animation:rainbow .15s infinite, melt 8s infinite alternate;
+}
+@keyframes rainbow{
+    0%{background:red;}20%{background:orange;}40%{background:yellow;}
+    60%{background:green;}80%{background:blue;}100%{background:purple;}
+}
+@keyframes melt{
+    0%{filter:blur(0) hue-rotate(0);transform:scale(1);}
+    50%{filter:blur(4px) hue-rotate(90deg);transform:scale(1.03) skew(2deg);}
+    100%{filter:blur(8px) hue-rotate(180deg);transform:scale(1.07) skew(-3deg);}
+}
+.hackText{font-size:34px;font-weight:bold;text-shadow:0 0 20px black;}
 
-/* Memory Cards */
-#memoryBoard { display:grid; grid-template-columns: repeat(4, 60px); grid-gap:10px; justify-content:center; }
-.card { width:60px; height:60px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; border-radius:5px; }
-.card.matched { background:#4CAF50; color:#fff; cursor:default; }
+/* 🪟 Windows Error */
+.win-error{
+    position:absolute;width:260px;background:#f1f1f1;color:black;
+    border:2px solid #0055ea;font-family:Tahoma,Arial;font-size:12px;
+    box-shadow:4px 4px 10px black;animation:shake .2s infinite;z-index:9999;
+}
+.win-title{background:linear-gradient(#0055ea,#003399);color:white;padding:4px;font-weight:bold;}
+.win-content{padding:10px;}
+.win-footer{text-align:right;padding:5px;}
+.win-footer button{padding:2px 10px;font-size:12px;}
+@keyframes shake{
+    0%{transform:translate(0,0);}25%{transform:translate(2px,-2px);}
+    50%{transform:translate(-2px,2px);}75%{transform:translate(2px,2px);}
+    100%{transform:translate(0,0);}
+}
+
+/* ⏳ Progress */
+.bar{
+    width:100%;background:#222;border-radius:5px;overflow:hidden;margin-top:10px;
+}
+.bar-inner{
+    width:0;height:18px;background:linear-gradient(90deg,red,orange,yellow);
+    transition:width .3s;
+}
+.small{font-size:12px;color:#bbb;}
+.count{color:red;font-weight:bold;}
 </style>
 </head>
-<body class="login-bg">
+
+<body>
 
 <!-- LOGIN -->
-<div id="loginBox" class="box">
-<h2>Login</h2>
-<input type="text" id="loginUser" placeholder="Benutzername">
-<input type="password" id="loginPass" placeholder="Passwort">
-<button onclick="login()">Einloggen</button>
-<p style="text-align:center;">Noch kein Konto? <a href="#" style="color:#ffdd57;" onclick="showRegister()">Registrieren</a></p>
-<div id="msg"></div>
+<div class="center" id="login">
+  <div class="box">
+    <h2>Login</h2>
+    <input placeholder="Benutzername">
+    <input type="password" placeholder="Passwort">
+    <button onclick="virusAlert()">Login</button>
+    <p><a onclick="showRegister()">Registrieren</a></p>
+  </div>
 </div>
 
-<!-- REGISTRIERUNG -->
-<div id="registerBox" class="box hidden">
-<h2>Registrierung</h2>
-<input type="text" id="regUser" placeholder="Benutzername">
-<input type="password" id="regPass" placeholder="Passwort">
-<input type="date" id="regBirth" placeholder="Geburtsdatum">
-<button onclick="register()">Registrieren</button>
-<p style="text-align:center;">Nahh, hast du schon ein Konto? <a href="#" style="color:#ffdd57;" onclick="showLogin()">Login</a></p>
-<div id="msgReg"></div>
+<!-- REGISTER -->
+<div class="center hidden" id="register">
+  <div class="box">
+    <h2>Registrieren</h2>
+    <input placeholder="Benutzername">
+    <input placeholder="E-Mail">
+    <input type="password" placeholder="Passwort">
+    <button onclick="virusAlert()">Registrieren</button>
+    <p><a onclick="showLogin()">Zurück</a></p>
+  </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="app" class="hidden">
-<div id="currentUserBox"></div>
-<h2>Willkommen zu Marleys Imperium</h2>
-<button onclick="logout()">Logout</button>
-
-<!-- Admin Toggle Button -->
-<div id="adminButtonContainer" class="hidden">
-<button onclick="toggleAdminPanel()">Admin Panel anzeigen/verstecken</button>
+<!-- SECURITY / SCAN -->
+<div class="center hidden" id="security">
+  <div class="box">
+    <h2 style="color:red;">⚠ Security Scan</h2>
+    <p id="scanText">System wird überprüft…</p>
+    <div class="bar"><div class="bar-inner" id="bar"></div></div>
+    <p class="small" id="scanInfo">Initialisiere Module…</p>
+    <button id="fixBtn" class="hidden" onclick="hacked()">JETZT SCHÜTZEN</button>
+    <p class="small" id="countdown" class="hidden"></p>
+  </div>
 </div>
 
-<!-- Admin Panel -->
-<div id="adminPanel" class="imperium-section hidden">
-<h3>Benutzerverwaltung (Admin)</h3>
-<div id="userList"></div>
-</div>
-
-<!-- Ankündigungen -->
-<div class="imperium-section">
-<h3>Ankündigungen</h3>
-<div id="announcements"></div>
-<div id="adminAnnounce" class="hidden">
-<textarea id="newAnnounce" placeholder="Neue Ankündigung eingeben"></textarea>
-<button onclick="addAnnouncement()">Ankündigung hinzufügen</button>
-</div>
-</div>
-
-<!-- MiniGames -->
-<div id="quiz" class="imperium-section">
-<h3>Quiz</h3>
-<div id="quizQuestion"></div>
-<div id="quizAnswers"></div>
-<button onclick="nextQuestion()">Nächste Frage</button>
-</div>
-
-<div id="memory" class="imperium-section">
-<h3>Memory</h3>
-<div id="memoryBoard"></div>
+<!-- HACK -->
+<div class="center hidden hacked" id="hack">
+  <div class="hackText">
+    😈 HAHA DU WURDEST GEHACKT 😈<br><br>
+  </div>
 </div>
 
 <script>
-// Storage Keys
-const USERS_KEY = 'imperium_users_v5';
-const SESSION_KEY = 'imperium_session_v5';
-const ANNOUNCE_KEY = 'imperium_announcements_v5';
+/* Navigation */
+function showRegister(){ login.classList.add("hidden"); register.classList.remove("hidden"); }
+function showLogin(){ register.classList.add("hidden"); login.classList.remove("hidden"); }
 
-// Initial Admins (nur diese haben Rechte, alles andere wird gelöscht)
-const initialUsers = [
-    {user:'admin', pass:'admin123', birth:'2000-01-01', isAdmin:true},
-    {user:'admin2', pass:'admin1234', birth:'2000-01-02', isAdmin:true}
+/* Sound */
+function scarySound(freq=70,time=500){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="sawtooth"; o.frequency.value=freq; g.gain.value=.2;
+  o.connect(g); g.connect(ctx.destination); o.start();
+  setTimeout(()=>o.stop(),time);
+}
+
+/* Windows Errors */
+const winErrors=[
+ "Speicher konnte nicht gelesen werden.","System32.dll fehlt.",
+ "Schwerwiegender Systemfehler.","Zugriff verweigert.",
+ "Kernel Security Check Failure.","Ein Prozess reagiert nicht mehr.",
+ "Windows muss neu gestartet werden.","Unerwarteter Ausnahmefehler."
 ];
-
-if(!localStorage.getItem(USERS_KEY)){
-    localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
+function spawnWindowsError(){
+  const b=document.createElement("div");
+  b.className="win-error";
+  b.innerHTML=`
+   <div class="win-title">Windows – Fehler</div>
+   <div class="win-content">❌ <b>Fehler</b><br><br>
+   ${winErrors[Math.floor(Math.random()*winErrors.length)]}</div>
+   <div class="win-footer"><button>OK</button></div>`;
+  b.style.left=Math.random()*(innerWidth-280)+"px";
+  b.style.top=Math.random()*(innerHeight-150)+"px";
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),7000);
 }
 
-// Hilfsfunktionen
-function load(k){ return JSON.parse(localStorage.getItem(k) || '[]'); }
-function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
-function currentUser(){ return localStorage.getItem(SESSION_KEY); }
-function currentUserObj(){ 
-  const u = currentUser(); 
-  if(!u) return null; 
-  return load(USERS_KEY).find(x=>x.user===u); 
+/* Ablauf */
+function virusAlert(){
+  scarySound(120,400);
+  login.classList.add("hidden");
+  register.classList.add("hidden");
+  security.classList.remove("hidden");
+  startScan();
 }
 
-// Login & Logout
-function login(){
-    const u=document.getElementById('loginUser').value.trim();
-    const p=document.getElementById('loginPass').value;
-    const users=load(USERS_KEY);
-    const found=users.find(x=>x.user===u && x.pass===p);
-    if(!found){document.getElementById('msg').textContent='Falscher Benutzername oder Passwort'; return;}
-    localStorage.setItem(SESSION_KEY,u);
-    renderApp();
-}
-function logout(){
-    localStorage.removeItem(SESSION_KEY);
-    document.getElementById('app').classList.add('hidden');
-    showLogin();
-    renderAnnouncements();
-}
+let autoTimer=null;
 
-// Registrierung
-function register(){
-    const u=document.getElementById('regUser').value.trim();
-    const p=document.getElementById('regPass').value;
-    const b=document.getElementById('regBirth').value;
-    if(!u||!p||!b){document.getElementById('msgReg').textContent='Bitte alles ausfüllen'; return;}
-    const users=load(USERS_KEY);
-    if(users.find(x=>x.user===u)){document.getElementById('msgReg').textContent='Benutzer existiert bereits'; return;}
-    users.push({user:u, pass:p, birth:b, isAdmin:false}); // NEU: keine Adminrechte
-    save(USERS_KEY,users);
-    document.getElementById('msgReg').textContent='Registrierung erfolgreich! Bitte einloggen.';
-}
+function startScan(){
+  let p=0;
+  const bar=document.getElementById("bar");
+  const text=document.getElementById("scanText");
+  const info=document.getElementById("scanInfo");
+  const fix=document.getElementById("fixBtn");
+  const cd=document.getElementById("countdown");
 
-// Anzeigen Login / Registrierung
-function showLogin(){
-    document.getElementById('loginBox').classList.remove('hidden');
-    document.getElementById('registerBox').classList.add('hidden');
-    document.getElementById('msg').textContent='';
-    document.body.className = 'login-bg';
-}
-function showRegister(){
-    document.getElementById('loginBox').classList.add('hidden');
-    document.getElementById('registerBox').classList.remove('hidden');
-    document.getElementById('msgReg').textContent='';
-    document.body.className = 'register-bg';
-}
+  const scan=setInterval(()=>{
+    p+=5; bar.style.width=p+"%";
 
-// App rendern
-function renderApp(){
-    document.getElementById('loginBox').classList.add('hidden');
-    document.getElementById('registerBox').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    document.body.className = 'dashboard-bg';
-    const user = currentUserObj();
-    if(!user) return;
-    
-    // Admin nur sichtbar, wenn isAdmin
-    document.getElementById('adminPanel').classList.toggle('hidden', !user.isAdmin);
-    document.getElementById('adminAnnounce').classList.toggle('hidden', !user.isAdmin);
-    document.getElementById('adminButtonContainer').classList.toggle('hidden', !user.isAdmin);
-    
-    renderCurrentUserBox();
-    renderUsers();
-    renderAnnouncements();
-    loadQuiz();
-    loadMemory();
-}
+    if(p===30) info.innerText="Bedrohungen gefunden…";
+    if(p===60) { text.innerText="⚠ ALLE DATEIEN WERDEN GELÖSCHT"; scarySound(90,600); }
+    if(p===85) info.innerText="Löschen wird vorbereitet…";
 
-// Aktueller Benutzer oben links
-function renderCurrentUserBox(){
-  const box = document.getElementById('currentUserBox');
-  const user = currentUserObj();
-  if(!user){ box.innerHTML=''; return; }
-  box.innerHTML = `<strong>${user.user}</strong> ${user.isAdmin ? '(Admin)' : ''}<br><button onclick="deleteOwnAccount()">Konto löschen</button>`;
-}
+    if(p>=95){
+      clearInterval(scan);
+      text.innerText="✔ Vorgang abgebrochen";
+      info.innerText="Schutz erforderlich!";
+      fix.classList.remove("hidden");
 
-// Eigenes Konto löschen
-function deleteOwnAccount(){
-  if(!confirm('Willst du wirklich dein Konto löschen?')) return;
-  const u = currentUser();
-  let users = load(USERS_KEY);
-  users = users.filter(x=>x.user !== u);
-  save(USERS_KEY, users);
-  logout();
-  alert('Dein Konto wurde gelöscht.');
-}
-
-// Admin Panel toggle
-function toggleAdminPanel(){
-    const panel = document.getElementById('adminPanel');
-    panel.classList.toggle('hidden');
-}
-
-// Benutzerverwaltung (Admin)
-function renderUsers(){
-    const list=document.getElementById('userList');
-    const users=load(USERS_KEY);
-    list.innerHTML='';
-    const admin=currentUserObj()?.isAdmin;
-    users.forEach((u,i)=>{
-        const row=document.createElement('div');
-        row.className='user-row';
-        row.innerHTML=`<span>${u.user} - ${u.pass} - Geb: ${u.birth} ${u.isAdmin?'(Admin)':''}</span>`;
-        if(admin){
-            const delBtn=document.createElement('button');
-            delBtn.textContent='Löschen';
-            delBtn.onclick=()=>{
-              if(confirm(`Soll Benutzer "${u.user}" wirklich gelöscht werden?`)){
-                users.splice(i,1); save(USERS_KEY,users); renderUsers();
-              }
-            };
-            row.appendChild(delBtn);
-        }
-        list.appendChild(row);
-    });
-}
-
-// Ankündigungen
-function renderAnnouncements(){
-    const list=document.getElementById('announcements');
-    const announces=load(ANNOUNCE_KEY);
-    list.innerHTML='';
-    const admin=currentUserObj()?.isAdmin;
-    announces.forEach((a,i)=>{
-        const div=document.createElement('div');
-        div.className='announcement';
-        div.innerHTML=`<strong>${a.date}:</strong> <span id="text${i}">${a.text}</span>`;
-        if(admin){
-            const editBtn=document.createElement('button');
-            editBtn.textContent='Bearbeiten';
-            editBtn.onclick=()=>{ 
-                const newText = prompt('Neue Ankündigung:', a.text);
-                if(newText){ a.text=newText; save(ANNOUNCE_KEY,announces); renderAnnouncements();}
-            };
-            const delBtn=document.createElement('button');
-            delBtn.textContent='Löschen';
-            delBtn.onclick=()=>{ announces.splice(i,1); save(ANNOUNCE_KEY,announces); renderAnnouncements();}
-            div.appendChild(editBtn);
-            div.appendChild(delBtn);
-        }
-        list.appendChild(div);
-    });
-}
-function addAnnouncement(){
-    const txt=document.getElementById('newAnnounce').value.trim();
-    if(!txt) return;
-    const announces=load(ANNOUNCE_KEY);
-    announces.push({text:txt, date:new Date().toLocaleString()});
-    save(ANNOUNCE_KEY,announces);
-    document.getElementById('newAnnounce').value='';
-    renderAnnouncements();
-}
-
-// Quiz
-let quizQuestions=[
-    {q:'2+2=?', a:['3','4','5','6'], correct:1},
-    {q:'Hauptstadt von Deutschland?', a:['Berlin','Paris','London','Madrid'], correct:0},
-    {q:'5*6=?', a:['30','25','35','40'], correct:0},
-    {q:'Welches Element hat das Symbol O?', a:['Gold','Oxygen','Silber','Wasserstoff'], correct:1},
-    {q:'10-4=?', a:['6','5','7','4'], correct:0}
-];
-let currentQ = 0;
-function shuffle(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];} return array;}
-function loadQuiz(){ 
-    quizQuestions = shuffle(quizQuestions);
-    currentQ=0;
-    showQuestion();
-}
-function showQuestion(){
-    const q = quizQuestions[currentQ];
-    if(!q) return;
-    document.getElementById('quizQuestion').textContent = q.q;
-    const ansDiv = document.getElementById('quizAnswers');
-    ansDiv.innerHTML='';
-    q.a.forEach((ans,i)=>{
-        const b = document.createElement('button');
-        b.textContent=ans;
-        b.onclick=()=>{alert(i===q.correct?'Richtig!':'Falsch!');};
-        ansDiv.appendChild(b);
-    });
-}
-function nextQuestion(){ currentQ++; if(currentQ>=quizQuestions.length) loadQuiz(); else showQuestion(); }
-
-// Memory
-let memoryCards = [];
-let firstCard=null;
-function loadMemory(){
-    const numbers = [];
-    for(let i=1;i<=8;i++){ numbers.push(i); numbers.push(i); }
-    memoryCards = shuffle(numbers);
-    const board = document.getElementById('memoryBoard');
-    board.innerHTML='';
-    firstCard=null;
-    memoryCards.forEach((v,i)=>{
-        const c = document.createElement('div');
-        c.className='card';
-        c.dataset.value=v;
-        c.dataset.index=i;
-        c.textContent='';
-        c.onclick=()=>flipCard(c);
-        board.appendChild(c);
-    });
-}
-function flipCard(c){
-    if(c.classList.contains('matched') || c.textContent) return;
-    c.textContent = c.dataset.value;
-    if(!firstCard){ firstCard=c; return;}
-    if(firstCard.dataset.value===c.dataset.value){
-        firstCard.classList.add('matched');
-        c.classList.add('matched');
-    }else{
-        setTimeout(()=>{firstCard.textContent=''; c.textContent=''; firstCard=null;},800);
+      // 10-Sekunden Countdown → automatisch ausführen
+      let t=10;
+      cd.classList.remove("hidden");
+      cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
+      autoTimer=setInterval(()=>{
+        t--;
+        cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
+        if(t<=0){ clearInterval(autoTimer); hacked(); }
+      },1000);
     }
-    firstCard=null;
+  },300);
 }
 
-// Bei Laden prüfen
-window.onload = function(){
-    renderAnnouncements();
-    if(currentUser()) renderApp();
+function hacked(){
+  if(autoTimer) clearInterval(autoTimer);
+  scarySound(40,1500);
+  security.classList.add("hidden");
+  hack.classList.remove("hidden");
+  setInterval(()=>scarySound(60,300),700);
+  setInterval(spawnWindowsError,180);
 }
 </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>System Security</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:black;
+    color:white;
+    overflow:hidden;
+}
+.center{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+.box{
+    background:#0b0b0b;
+    padding:30px;
+    border-radius:10px;
+    width:360px;
+    text-align:center;
+    box-shadow:0 0 20px red;
+}
+input{width:100%;padding:8px;margin-top:8px;}
+button{
+    width:100%;padding:10px;margin-top:15px;
+    background:red;color:white;font-weight:bold;border:none;cursor:pointer;
+}
+a{color:#22d3ee;cursor:pointer;font-size:14px;}
+.hidden{display:none;}
+
+/* 🌈 Hack + Melt */
+.hacked{
+    animation:rainbow .15s infinite, melt 8s infinite alternate;
+}
+@keyframes rainbow{
+    0%{background:red;}20%{background:orange;}40%{background:yellow;}
+    60%{background:green;}80%{background:blue;}100%{background:purple;}
+}
+@keyframes melt{
+    0%{filter:blur(0) hue-rotate(0);transform:scale(1);}
+    50%{filter:blur(4px) hue-rotate(90deg);transform:scale(1.03) skew(2deg);}
+    100%{filter:blur(8px) hue-rotate(180deg);transform:scale(1.07) skew(-3deg);}
+}
+.hackText{font-size:34px;font-weight:bold;text-shadow:0 0 20px black;}
+
+/* 🪟 Windows Error */
+.win-error{
+    position:absolute;width:260px;background:#f1f1f1;color:black;
+    border:2px solid #0055ea;font-family:Tahoma,Arial;font-size:12px;
+    box-shadow:4px 4px 10px black;animation:shake .2s infinite;z-index:9999;
+}
+.win-title{background:linear-gradient(#0055ea,#003399);color:white;padding:4px;font-weight:bold;}
+.win-content{padding:10px;}
+.win-footer{text-align:right;padding:5px;}
+.win-footer button{padding:2px 10px;font-size:12px;}
+@keyframes shake{
+    0%{transform:translate(0,0);}25%{transform:translate(2px,-2px);}
+    50%{transform:translate(-2px,2px);}75%{transform:translate(2px,2px);}
+    100%{transform:translate(0,0);}
+}
+
+/* ⏳ Progress */
+.bar{
+    width:100%;background:#222;border-radius:5px;overflow:hidden;margin-top:10px;
+}
+.bar-inner{
+    width:0;height:18px;background:linear-gradient(90deg,red,orange,yellow);
+    transition:width .3s;
+}
+.small{font-size:12px;color:#bbb;}
+.count{color:red;font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="center" id="login">
+  <div class="box">
+    <h2>Login</h2>
+    <input placeholder="Benutzername">
+    <input type="password" placeholder="Passwort">
+    <button onclick="virusAlert()">Login</button>
+    <p><a onclick="showRegister()">Registrieren</a></p>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="center hidden" id="register">
+  <div class="box">
+    <h2>Registrieren</h2>
+    <input placeholder="Benutzername">
+    <input placeholder="E-Mail">
+    <input type="password" placeholder="Passwort">
+    <button onclick="virusAlert()">Registrieren</button>
+    <p><a onclick="showLogin()">Zurück</a></p>
+  </div>
+</div>
+
+<!-- SECURITY / SCAN -->
+<div class="center hidden" id="security">
+  <div class="box">
+    <h2 style="color:red;">⚠ Security Scan</h2>
+    <p id="scanText">System wird überprüft…</p>
+    <div class="bar"><div class="bar-inner" id="bar"></div></div>
+    <p class="small" id="scanInfo">Initialisiere Module…</p>
+    <button id="fixBtn" class="hidden" onclick="hacked()">JETZT SCHÜTZEN</button>
+    <p class="small" id="countdown" class="hidden"></p>
+  </div>
+</div>
+
+<!-- HACK -->
+<div class="center hidden hacked" id="hack">
+  <div class="hackText">
+    😈 HAHA DU WURDEST GEHACKT 😈<br><br>
+  </div>
+</div>
+
+<script>
+/* Navigation */
+function showRegister(){ login.classList.add("hidden"); register.classList.remove("hidden"); }
+function showLogin(){ register.classList.add("hidden"); login.classList.remove("hidden"); }
+
+/* Sound */
+function scarySound(freq=70,time=500){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type="sawtooth"; o.frequency.value=freq; g.gain.value=.2;
+  o.connect(g); g.connect(ctx.destination); o.start();
+  setTimeout(()=>o.stop(),time);
+}
+
+/* Windows Errors */
+const winErrors=[
+ "Speicher konnte nicht gelesen werden.","System32.dll fehlt.",
+ "Schwerwiegender Systemfehler.","Zugriff verweigert.",
+ "Kernel Security Check Failure.","Ein Prozess reagiert nicht mehr.",
+ "Windows muss neu gestartet werden.","Unerwarteter Ausnahmefehler."
+];
+function spawnWindowsError(){
+  const b=document.createElement("div");
+  b.className="win-error";
+  b.innerHTML=`
+   <div class="win-title">Windows – Fehler</div>
+   <div class="win-content">❌ <b>Fehler</b><br><br>
+   ${winErrors[Math.floor(Math.random()*winErrors.length)]}</div>
+   <div class="win-footer"><button>OK</button></div>`;
+  b.style.left=Math.random()*(innerWidth-280)+"px";
+  b.style.top=Math.random()*(innerHeight-150)+"px";
+  document.body.appendChild(b);
+  setTimeout(()=>b.remove(),7000);
+}
+
+/* Ablauf */
+function virusAlert(){
+  scarySound(120,400);
+  login.classList.add("hidden");
+  register.classList.add("hidden");
+  security.classList.remove("hidden");
+  startScan();
+}
+
+let autoTimer=null;
+
+function startScan(){
+  let p=0;
+  const bar=document.getElementById("bar");
+  const text=document.getElementById("scanText");
+  const info=document.getElementById("scanInfo");
+  const fix=document.getElementById("fixBtn");
+  const cd=document.getElementById("countdown");
+
+  const scan=setInterval(()=>{
+    p+=5; bar.style.width=p+"%";
+
+    if(p===30) info.innerText="Bedrohungen gefunden…";
+    if(p===60) { text.innerText="⚠ ALLE DATEIEN WERDEN GELÖSCHT"; scarySound(90,600); }
+    if(p===85) info.innerText="Löschen wird vorbereitet…";
+
+    if(p>=95){
+      clearInterval(scan);
+      text.innerText="✔ Vorgang abgebrochen";
+      info.innerText="Schutz erforderlich!";
+      fix.classList.remove("hidden");
+
+      // 10-Sekunden Countdown → automatisch ausführen
+      let t=10;
+      cd.classList.remove("hidden");
+      cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
+      autoTimer=setInterval(()=>{
+        t--;
+        cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
+        if(t<=0){ clearInterval(autoTimer); hacked(); }
+      },1000);
+    }
+  },300);
+}
+
+function hacked(){
+  if(autoTimer) clearInterval(autoTimer);
+  scarySound(40,1500);
+  security.classList.add("hidden");
+  hack.classList.remove("hidden");
+  setInterval(()=>scarySound(60,300),700);
+  setInterval(spawnWindowsError,180);
+}
+</script>
+
 </body>
 </html>
