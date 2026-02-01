@@ -1,432 +1,252 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>System Security</title>
-
-<style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:black;
-    color:white;
-    overflow:hidden;
-}
-.center{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-.box{
-    background:#0b0b0b;
-    padding:30px;
-    border-radius:10px;
-    width:360px;
-    text-align:center;
-    box-shadow:0 0 20px red;
-}
-input{width:100%;padding:8px;margin-top:8px;}
-button{
-    width:100%;padding:10px;margin-top:15px;
-    background:red;color:white;font-weight:bold;border:none;cursor:pointer;
-}
-a{color:#22d3ee;cursor:pointer;font-size:14px;}
-.hidden{display:none;}
-
-/* 🌈 Hack + Melt */
-.hacked{
-    animation:rainbow .15s infinite, melt 8s infinite alternate;
-}
-@keyframes rainbow{
-    0%{background:red;}20%{background:orange;}40%{background:yellow;}
-    60%{background:green;}80%{background:blue;}100%{background:purple;}
-}
-@keyframes melt{
-    0%{filter:blur(0) hue-rotate(0);transform:scale(1);}
-    50%{filter:blur(4px) hue-rotate(90deg);transform:scale(1.03) skew(2deg);}
-    100%{filter:blur(8px) hue-rotate(180deg);transform:scale(1.07) skew(-3deg);}
-}
-.hackText{font-size:34px;font-weight:bold;text-shadow:0 0 20px black;}
-
-/* 🪟 Windows Error */
-.win-error{
-    position:absolute;width:260px;background:#f1f1f1;color:black;
-    border:2px solid #0055ea;font-family:Tahoma,Arial;font-size:12px;
-    box-shadow:4px 4px 10px black;animation:shake .2s infinite;z-index:9999;
-}
-.win-title{background:linear-gradient(#0055ea,#003399);color:white;padding:4px;font-weight:bold;}
-.win-content{padding:10px;}
-.win-footer{text-align:right;padding:5px;}
-.win-footer button{padding:2px 10px;font-size:12px;}
-@keyframes shake{
-    0%{transform:translate(0,0);}25%{transform:translate(2px,-2px);}
-    50%{transform:translate(-2px,2px);}75%{transform:translate(2px,2px);}
-    100%{transform:translate(0,0);}
-}
-
-/* ⏳ Progress */
-.bar{
-    width:100%;background:#222;border-radius:5px;overflow:hidden;margin-top:10px;
-}
-.bar-inner{
-    width:0;height:18px;background:linear-gradient(90deg,red,orange,yellow);
-    transition:width .3s;
-}
-.small{font-size:12px;color:#bbb;}
-.count{color:red;font-weight:bold;}
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div class="center" id="login">
-  <div class="box">
-    <h2>Login</h2>
-    <input placeholder="Benutzername">
-    <input type="password" placeholder="Passwort">
-    <button onclick="virusAlert()">Login</button>
-    <p><a onclick="showRegister()">Registrieren</a></p>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div class="center hidden" id="register">
-  <div class="box">
-    <h2>Registrieren</h2>
-    <input placeholder="Benutzername">
-    <input placeholder="E-Mail">
-    <input type="password" placeholder="Passwort">
-    <button onclick="virusAlert()">Registrieren</button>
-    <p><a onclick="showLogin()">Zurück</a></p>
-  </div>
-</div>
-
-<!-- SECURITY / SCAN -->
-<div class="center hidden" id="security">
-  <div class="box">
-    <h2 style="color:red;">⚠ Security Scan</h2>
-    <p id="scanText">System wird überprüft…</p>
-    <div class="bar"><div class="bar-inner" id="bar"></div></div>
-    <p class="small" id="scanInfo">Initialisiere Module…</p>
-    <button id="fixBtn" class="hidden" onclick="hacked()">JETZT SCHÜTZEN</button>
-    <p class="small" id="countdown" class="hidden"></p>
-  </div>
-</div>
-
-<!-- HACK -->
-<div class="center hidden hacked" id="hack">
-  <div class="hackText">
-    😈 HAHA DU WURDEST GEHACKT 😈<br><br>
-  </div>
-</div>
-
-<script>
-/* Navigation */
-function showRegister(){ login.classList.add("hidden"); register.classList.remove("hidden"); }
-function showLogin(){ register.classList.add("hidden"); login.classList.remove("hidden"); }
-
-/* Sound */
-function scarySound(freq=70,time=500){
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=ctx.createOscillator(), g=ctx.createGain();
-  o.type="sawtooth"; o.frequency.value=freq; g.gain.value=.2;
-  o.connect(g); g.connect(ctx.destination); o.start();
-  setTimeout(()=>o.stop(),time);
-}
-
-/* Windows Errors */
-const winErrors=[
- "Speicher konnte nicht gelesen werden.","System32.dll fehlt.",
- "Schwerwiegender Systemfehler.","Zugriff verweigert.",
- "Kernel Security Check Failure.","Ein Prozess reagiert nicht mehr.",
- "Windows muss neu gestartet werden.","Unerwarteter Ausnahmefehler."
-];
-function spawnWindowsError(){
-  const b=document.createElement("div");
-  b.className="win-error";
-  b.innerHTML=`
-   <div class="win-title">Windows – Fehler</div>
-   <div class="win-content">❌ <b>Fehler</b><br><br>
-   ${winErrors[Math.floor(Math.random()*winErrors.length)]}</div>
-   <div class="win-footer"><button>OK</button></div>`;
-  b.style.left=Math.random()*(innerWidth-280)+"px";
-  b.style.top=Math.random()*(innerHeight-150)+"px";
-  document.body.appendChild(b);
-  setTimeout(()=>b.remove(),7000);
-}
-
-/* Ablauf */
-function virusAlert(){
-  scarySound(120,400);
-  login.classList.add("hidden");
-  register.classList.add("hidden");
-  security.classList.remove("hidden");
-  startScan();
-}
-
-let autoTimer=null;
-
-function startScan(){
-  let p=0;
-  const bar=document.getElementById("bar");
-  const text=document.getElementById("scanText");
-  const info=document.getElementById("scanInfo");
-  const fix=document.getElementById("fixBtn");
-  const cd=document.getElementById("countdown");
-
-  const scan=setInterval(()=>{
-    p+=5; bar.style.width=p+"%";
-
-    if(p===30) info.innerText="Bedrohungen gefunden…";
-    if(p===60) { text.innerText="⚠ ALLE DATEIEN WERDEN GELÖSCHT"; scarySound(90,600); }
-    if(p===85) info.innerText="Löschen wird vorbereitet…";
-
-    if(p>=95){
-      clearInterval(scan);
-      text.innerText="✔ Vorgang abgebrochen";
-      info.innerText="Schutz erforderlich!";
-      fix.classList.remove("hidden");
-
-      // 10-Sekunden Countdown → automatisch ausführen
-      let t=10;
-      cd.classList.remove("hidden");
-      cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
-      autoTimer=setInterval(()=>{
-        t--;
-        cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
-        if(t<=0){ clearInterval(autoTimer); hacked(); }
-      },1000);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚠️ SYSTEMWARNUNG ⚠️</title>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --red:#ff2b2b;
+      --green:#2bff7a;
+      --blue:#2bc2ff;
+      --yellow:#ffe92b;
     }
-  },300);
-}
-
-function hacked(){
-  if(autoTimer) clearInterval(autoTimer);
-  scarySound(40,1500);
-  security.classList.add("hidden");
-  hack.classList.remove("hidden");
-  setInterval(()=>scarySound(60,300),700);
-  setInterval(spawnWindowsError,180);
-}
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<title>System Security</title>
-
-<style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:black;
-    color:white;
-    overflow:hidden;
-}
-.center{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-.box{
-    background:#0b0b0b;
-    padding:30px;
-    border-radius:10px;
-    width:360px;
-    text-align:center;
-    box-shadow:0 0 20px red;
-}
-input{width:100%;padding:8px;margin-top:8px;}
-button{
-    width:100%;padding:10px;margin-top:15px;
-    background:red;color:white;font-weight:bold;border:none;cursor:pointer;
-}
-a{color:#22d3ee;cursor:pointer;font-size:14px;}
-.hidden{display:none;}
-
-/* 🌈 Hack + Melt */
-.hacked{
-    animation:rainbow .15s infinite, melt 8s infinite alternate;
-}
-@keyframes rainbow{
-    0%{background:red;}20%{background:orange;}40%{background:yellow;}
-    60%{background:green;}80%{background:blue;}100%{background:purple;}
-}
-@keyframes melt{
-    0%{filter:blur(0) hue-rotate(0);transform:scale(1);}
-    50%{filter:blur(4px) hue-rotate(90deg);transform:scale(1.03) skew(2deg);}
-    100%{filter:blur(8px) hue-rotate(180deg);transform:scale(1.07) skew(-3deg);}
-}
-.hackText{font-size:34px;font-weight:bold;text-shadow:0 0 20px black;}
-
-/* 🪟 Windows Error */
-.win-error{
-    position:absolute;width:260px;background:#f1f1f1;color:black;
-    border:2px solid #0055ea;font-family:Tahoma,Arial;font-size:12px;
-    box-shadow:4px 4px 10px black;animation:shake .2s infinite;z-index:9999;
-}
-.win-title{background:linear-gradient(#0055ea,#003399);color:white;padding:4px;font-weight:bold;}
-.win-content{padding:10px;}
-.win-footer{text-align:right;padding:5px;}
-.win-footer button{padding:2px 10px;font-size:12px;}
-@keyframes shake{
-    0%{transform:translate(0,0);}25%{transform:translate(2px,-2px);}
-    50%{transform:translate(-2px,2px);}75%{transform:translate(2px,2px);}
-    100%{transform:translate(0,0);}
-}
-
-/* ⏳ Progress */
-.bar{
-    width:100%;background:#222;border-radius:5px;overflow:hidden;margin-top:10px;
-}
-.bar-inner{
-    width:0;height:18px;background:linear-gradient(90deg,red,orange,yellow);
-    transition:width .3s;
-}
-.small{font-size:12px;color:#bbb;}
-.count{color:red;font-weight:bold;}
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div class="center" id="login">
-  <div class="box">
-    <h2>Login</h2>
-    <input placeholder="Benutzername">
-    <input type="password" placeholder="Passwort">
-    <button onclick="virusAlert()">Login</button>
-    <p><a onclick="showRegister()">Registrieren</a></p>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div class="center hidden" id="register">
-  <div class="box">
-    <h2>Registrieren</h2>
-    <input placeholder="Benutzername">
-    <input placeholder="E-Mail">
-    <input type="password" placeholder="Passwort">
-    <button onclick="virusAlert()">Registrieren</button>
-    <p><a onclick="showLogin()">Zurück</a></p>
-  </div>
-</div>
-
-<!-- SECURITY / SCAN -->
-<div class="center hidden" id="security">
-  <div class="box">
-    <h2 style="color:red;">⚠ Security Scan</h2>
-    <p id="scanText">System wird überprüft…</p>
-    <div class="bar"><div class="bar-inner" id="bar"></div></div>
-    <p class="small" id="scanInfo">Initialisiere Module…</p>
-    <button id="fixBtn" class="hidden" onclick="hacked()">JETZT SCHÜTZEN</button>
-    <p class="small" id="countdown" class="hidden"></p>
-  </div>
-</div>
-
-<!-- HACK -->
-<div class="center hidden hacked" id="hack">
-  <div class="hackText">
-    😈 HAHA DU WURDEST GEHACKT 😈<br><br>
-  </div>
-</div>
-
-<script>
-/* Navigation */
-function showRegister(){ login.classList.add("hidden"); register.classList.remove("hidden"); }
-function showLogin(){ register.classList.add("hidden"); login.classList.remove("hidden"); }
-
-/* Sound */
-function scarySound(freq=70,time=500){
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=ctx.createOscillator(), g=ctx.createGain();
-  o.type="sawtooth"; o.frequency.value=freq; g.gain.value=.2;
-  o.connect(g); g.connect(ctx.destination); o.start();
-  setTimeout(()=>o.stop(),time);
-}
-
-/* Windows Errors */
-const winErrors=[
- "Speicher konnte nicht gelesen werden.","System32.dll fehlt.",
- "Schwerwiegender Systemfehler.","Zugriff verweigert.",
- "Kernel Security Check Failure.","Ein Prozess reagiert nicht mehr.",
- "Windows muss neu gestartet werden.","Unerwarteter Ausnahmefehler."
-];
-function spawnWindowsError(){
-  const b=document.createElement("div");
-  b.className="win-error";
-  b.innerHTML=`
-   <div class="win-title">Windows – Fehler</div>
-   <div class="win-content">❌ <b>Fehler</b><br><br>
-   ${winErrors[Math.floor(Math.random()*winErrors.length)]}</div>
-   <div class="win-footer"><button>OK</button></div>`;
-  b.style.left=Math.random()*(innerWidth-280)+"px";
-  b.style.top=Math.random()*(innerHeight-150)+"px";
-  document.body.appendChild(b);
-  setTimeout(()=>b.remove(),7000);
-}
-
-/* Ablauf */
-function virusAlert(){
-  scarySound(120,400);
-  login.classList.add("hidden");
-  register.classList.add("hidden");
-  security.classList.remove("hidden");
-  startScan();
-}
-
-let autoTimer=null;
-
-function startScan(){
-  let p=0;
-  const bar=document.getElementById("bar");
-  const text=document.getElementById("scanText");
-  const info=document.getElementById("scanInfo");
-  const fix=document.getElementById("fixBtn");
-  const cd=document.getElementById("countdown");
-
-  const scan=setInterval(()=>{
-    p+=5; bar.style.width=p+"%";
-
-    if(p===30) info.innerText="Bedrohungen gefunden…";
-    if(p===60) { text.innerText="⚠ ALLE DATEIEN WERDEN GELÖSCHT"; scarySound(90,600); }
-    if(p===85) info.innerText="Löschen wird vorbereitet…";
-
-    if(p>=95){
-      clearInterval(scan);
-      text.innerText="✔ Vorgang abgebrochen";
-      info.innerText="Schutz erforderlich!";
-      fix.classList.remove("hidden");
-
-      // 10-Sekunden Countdown → automatisch ausführen
-      let t=10;
-      cd.classList.remove("hidden");
-      cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
-      autoTimer=setInterval(()=>{
-        t--;
-        cd.innerHTML=`Automatische Ausführung in <span class="count">${t}</span> Sekunden`;
-        if(t<=0){ clearInterval(autoTimer); hacked(); }
-      },1000);
+    *{box-sizing:border-box}
+    body{$1overflow:hidden;
+      animation: rainbow 4s linear infinite;
     }
-  },300);
-}
+    @keyframes rainbow{
+      0%{background-color:#ff0000}
+      14%{background-color:#ff7a00}
+      28%{background-color:#ffee00}
+      42%{background-color:#33ff00}
+      57%{background-color:#00ffee}
+      71%{background-color:#004cff}
+      85%{background-color:#9b00ff}
+      100%{background-color:#ff0000}
+    }
+    .center{
+      position:fixed; inset:0; display:grid; place-items:center; text-align:center;
+      padding:24px;
+    }
+    .panel{
+      max-width:780px;
+      background:rgba(0,0,0,.6);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:28px;
+      box-shadow:0 20px 60px rgba(0,0,0,.6);
+    }
+    h1{margin:0 0 10px; letter-spacing:.04em}
+    .warn{color:var(--red); font-weight:800;}
+    .btn{
+      margin-top:18px;
+      padding:14px 18px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:#111;
+      color:#fff;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn.primary{background:linear-gradient(135deg,#ff3b3b,#ff8b3b)}
+    .btn.ghost{background:#111}
+    .stack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+    .ticker{
+      position:fixed; left:0; right:0; bottom:0; height:42px;
+      background:#000; border-top:1px solid rgba(255,255,255,.12);
+      display:flex; align-items:center; overflow:hidden;
+    }
+    .ticker span{white-space:nowrap; padding-left:100%; animation:ticker 12s linear infinite}
+    @keyframes ticker{to{transform:translateX(-100%)}}
 
-function hacked(){
-  if(autoTimer) clearInterval(autoTimer);
-  scarySound(40,1500);
-  security.classList.add("hidden");
-  hack.classList.remove("hidden");
-  setInterval(()=>scarySound(60,300),700);
-  setInterval(spawnWindowsError,180);
-}
-</script>
+    /* Effekte (werden erst nach Klick aktiviert) */
+    .shake{animation:shake .08s infinite}
+    @keyframes shake{
+      0%{transform:translate(0,0)}
+      25%{transform:translate(2px,-2px)}
+      50%{transform:translate(-2px,2px)}
+      75%{transform:translate(2px,2px)}
+      100%{transform:translate(-2px,-2px)}
+    }
+    .flash{
+      animation:flash 1.2s infinite alternate;
+    }
+    @keyframes flash{
+      0%{background-color:#000}
+      25%{background-color:var(--red)}
+      50%{background-color:var(--blue)}
+      75%{background-color:var(--yellow)}
+      100%{background-color:#000}
+    }
+    .matrix{
+      position:fixed; inset:0; pointer-events:none; opacity:.25;
+      background-image:linear-gradient(transparent 50%, rgba(0,255,0,.15) 50%);
+      background-size:100% 3px;
+      animation:scan 2s linear infinite;
+    }
+    @keyframes scan{to{background-position:0 3px}}
 
+    .badge{
+      display:inline-block; padding:6px 10px; border-radius:999px;
+      background:#111; border:1px solid rgba(255,255,255,.18); font-weight:700
+    }
+
+    .safety{
+      position:fixed; top:12px; right:12px; display:flex; gap:8px;
+    }
+    .safety button{
+      padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.2);
+      background:#111; color:#fff; cursor:pointer; font-weight:700
+    }
+
+    /* Sichtbarkeit */
+    .hidden{display:none}
+    
+    /* Windows-ähnliche Fehlermeldungen */
+    .win-error{
+      position:fixed;
+      width:320px;
+      background:#e9e9e9;
+      color:#000;
+      border:1px solid #8a8a8a;
+      box-shadow:0 10px 30px rgba(0,0,0,.6);
+      border-radius:6px;
+      font-family:Segoe UI, Tahoma, Arial, sans-serif;
+      z-index:9999;
+    }
+    .win-title{
+      background:linear-gradient(#1f6fd6,#1859aa);
+      color:#fff;
+      padding:6px 10px;
+      font-weight:700;
+      border-top-left-radius:6px;
+      border-top-right-radius:6px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .win-body{padding:12px; display:flex; gap:10px; align-items:flex-start}
+    .win-icon{font-size:26px}
+    .win-actions{padding:10px; text-align:right}
+    .win-actions button{
+      padding:6px 14px; border-radius:4px; border:1px solid #7a7a7a; background:#f3f3f3; cursor:pointer
+    }
+  </style>
+</head>
+<body class="rainbow">
+  <div class="matrix hidden" id="matrix"></div>
+
+  <div class="safety">
+    <button id="stop">Effekte stoppen</button>
+    <button id="reduce">Effekte reduzieren</button>
+  </div>
+
+  <div class="center">
+    <div class="panel" id="panel">
+      <span class="badge">DEMO • HARMLOS</span>
+      <h1 class="warn">⚠️ KRITISCHE SYSTEMWARNUNG ⚠️</h1>
+      <p>Mehrere <strong>Viren</strong> wurden erkannt. Ihre Daten sind <strong>gefährdet</strong>.</p>
+      <p id="step">Status: Überprüfung läuft …</p>
+      <div class="stack">
+        <button class="btn ghost" id="scan">Jetzt scannen</button>
+        <button class="btn primary" id="upgrade">Antivirus aufrüsten</button>
+      </div>
+      <p style="opacity:.7; margin-top:10px">Hinweis: Das ist eine <strong>Fake-/Demo-Seite</strong> für Spaß/Präsentation.</p>
+    </div>
+  </div>
+
+  <div class="ticker"><span id="ticker">Virus gefunden • Trojaner aktiv • Zugriff blockiert • Firewall kompromittiert •</span></div>
+
+  <script>
+    const body = document.body;
+    const panel = document.getElementById('panel');
+    const step = document.getElementById('step');
+    const matrix = document.getElementById('matrix');
+    const scan = document.getElementById('scan');
+    const upgrade = document.getElementById('upgrade');
+    const stopBtn = document.getElementById('stop');
+    const reduceBtn = document.getElementById('reduce');
+
+    let level = 0; // Eskalationsstufe
+    let timers = [];
+
+    function clearTimers(){ timers.forEach(t=>clearTimeout(t)); timers=[]; }
+
+    function startLevel(l){
+      clearTimers(); level = l;
+      body.classList.remove('shake','flash');
+      matrix.classList.add('hidden');
+
+      if(l === 1){
+        step.textContent = 'Status: 3 Bedrohungen erkannt…';
+        timers.push(setTimeout(()=>step.textContent='Status: Zugriff auf Dateien blockiert…', 1200));
+      }
+      if(l === 2){
+        body.classList.add('shake');
+        step.textContent = 'Status: KRITISCH! System instabil…';
+      }
+      if(l === 3){
+        body.classList.add('shake','flash');
+        matrix.classList.remove('hidden');
+        step.textContent = 'Status: SOFORTIGES HANDELN ERFORDERLICH!';
+      }
+    }
+
+    scan.addEventListener('click', ()=>{
+      startLevel(1);
+      timers.push(setTimeout(()=>startLevel(2), 1800));
+    });
+
+    upgrade.addEventListener('click', ()=>{
+      startLevel(2);
+      timers.push(setTimeout(()=>startLevel(3), 1600));
+    });
+
+    stopBtn.addEventListener('click', ()=>{
+      clearTimers();
+      body.classList.remove('shake','flash');
+      matrix.classList.add('hidden');
+      step.textContent = 'Effekte gestoppt.';
+    });
+
+    reduceBtn.addEventListener('click', ()=>{
+      clearTimers();
+      body.classList.remove('flash');
+      body.classList.add('shake');
+      matrix.classList.add('hidden');
+      step.textContent = 'Reduzierter Modus aktiv.';
+    });
+  
+    // Windows-Fehlermeldungen (dauerhaft)
+    const messages = [
+      'Unbekannter Fehler 0x80004005',
+      'Zugriff verweigert auf System32',
+      'Speicher konnte nicht gelesen werden',
+      'Treiber nicht kompatibel',
+      'Dateisystem beschädigt',
+      'Firewall deaktiviert',
+      'Schwerwiegender Systemfehler'
+    ];
+
+    function spawnError(){
+      const box = document.createElement('div');
+      box.className = 'win-error';
+      box.style.left = Math.random()*(window.innerWidth-340) + 'px';
+      box.style.top  = Math.random()*(window.innerHeight-200) + 'px';
+      box.innerHTML = `
+        <div class="win-title">Windows <span>✖</span></div>
+        <div class="win-body">
+          <div class="win-icon">⚠️</div>
+          <div><strong>Fehler</strong><br>${messages[Math.floor(Math.random()*messages.length)]}</div>
+        </div>
+        <div class="win-actions"><button>OK</button></div>`;
+      box.querySelector('button').onclick = ()=> box.remove();
+      document.body.appendChild(box);
+      setTimeout(()=> box.remove(), 8000);
+    }
+
+    // startet automatisch und hört nicht auf
+    setInterval(spawnError, 900);
+  </script>
 </body>
 </html>
